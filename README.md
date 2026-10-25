@@ -16,14 +16,14 @@
 
 ---
 
-## 📌 Sobre
+##  Sobre
 
 O **JS Motion Lab** é uma plataforma interativa e animada para aprender, praticar e medir o seu nível em JavaScript.
 Em vez de um curso tradicional, a ideia é aprender **lendo, escrevendo e executando código de verdade**.
 
 Identidade visual: branco, quase-preto e o amarelo do JavaScript (`#F7DF1E`), com estética de programador.
 
-## ✨ Funcionalidades
+##  Funcionalidades
 
 | Página | O que faz |
 |---|---|
@@ -35,14 +35,14 @@ Identidade visual: branco, quase-preto e o amarelo do JavaScript (`#F7DF1E`), co
 | **Login** | Cadastro e login locais com animações contínuas sobre JavaScript |
 | **Configurações** | Idioma (English / Português-BR) e tema (claro / escuro) |
 
-## 🛠️ Tecnologias
+##  Tecnologias
 
 - **HTML5** semântico
 - **CSS3**: variáveis, grid, flexbox, animações e temas
 - **JavaScript puro (vanilla)**, sem frameworks e sem bibliotecas
 - Fontes: [Outfit](https://fonts.google.com/specimen/Outfit) e [JetBrains Mono](https://www.jetbrains.com/lp/mono/)
 
-## 🧠 Como funciona por dentro
+##  Como funciona por dentro
 
 - **Execução segura de código:** o código do usuário roda em um **Web Worker** (sem acesso ao DOM) e é encerrado após 2 segundos, o que evita laços infinitos travando a página.
 - **Exercícios reais:** cada exercício tem casos de teste; o progresso só é salvo quando todos passam.
@@ -54,7 +54,7 @@ Identidade visual: branco, quase-preto e o amarelo do JavaScript (`#F7DF1E`), co
 - **Acessibilidade:** foco visível, controles por teclado, `aria-*` nos menus, respeito a `prefers-reduced-motion`.
 - **Responsivo:** desktop, tablet e celular.
 
-## 📁 Estrutura
+##  Estrutura
 
 ```
 JS-Lab/
@@ -65,7 +65,7 @@ JS-Lab/
 
 > A arquitetura já separa dados (traduções, exercícios, artigos) da lógica, facilitando dividir em `style.css` e `script.js` e plugar um backend.
 
-## ▶️ Como rodar
+##  Como rodar
 
 Não precisa instalar nada. Abra o `index.html` no navegador, ou sirva a pasta:
 
@@ -73,7 +73,7 @@ Não precisa instalar nada. Abra o `index.html` no navegador, ou sirva a pasta:
 npx serve .
 ```
 
-## 🗺️ Próximos passos
+##  Próximos passos
 
 - [ ] Separar em `style.css` e `script.js`
 - [ ] Mais exercícios (DOM e Interatividade ainda sem desafios)
@@ -81,7 +81,7 @@ npx serve .
 - [ ] Backend e contas reais
 - [ ] Mais idiomas
 
-## 👤 Autor
+##  Autor
 
 **Flávio Caputo**
 [LinkedIn](https://www.linkedin.com/in/flaviocaputo/) · [GitHub](https://github.com/FlavioCaputo85) · [Repositório](https://github.com/FlavioCaputo85/JS-Lab)
