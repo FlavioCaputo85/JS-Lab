@@ -1,6 +1,5 @@
 <div align="center">
-
-<img src="logo.svg" alt="JS Motion Lab" width="220">
+<img src="assets/logo.svg" alt="JS Motion Lab" width="220">
 
 # JS Motion Lab
 
@@ -10,7 +9,7 @@
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=111)
 ![Dependências](https://img.shields.io/badge/depend%C3%AAncias-0-111?style=for-the-badge)
-![i18n](https://img.shields.io/badge/idiomas-EN%20%7C%20PT--BR-F7DF1E?style=for-the-badge&labelColor=111)
+![i18n](https://img.shields.io/badge/idiomas-5-F7DF1E?style=for-the-badge&labelColor=111)
 
 </div>
 
@@ -33,7 +32,7 @@ Identidade visual: branco, quase-preto e o amarelo do JavaScript (`#F7DF1E`), co
 | **Level** | Avaliação de nível (6 perguntas progressivas) com pontuação animada, pontos fortes, pontos a melhorar e exercícios recomendados |
 | **Profile** | Mapa de atividade estilo GitHub (53 semanas) em tons de amarelo, estatísticas, precisão, sequência, progresso por categoria e histórico |
 | **Login** | Cadastro e login locais com animações contínuas sobre JavaScript |
-| **Configurações** | Idioma (English / Português-BR) e tema (claro / escuro) |
+| **Configurações** | Janela modal aberta pelo ícone no header: idioma (com bandeiras), tema, animações, tamanho do código e reset de progresso |
 
 ##  Tecnologias
 
@@ -46,7 +45,8 @@ Identidade visual: branco, quase-preto e o amarelo do JavaScript (`#F7DF1E`), co
 
 - **Execução segura de código:** o código do usuário roda em um **Web Worker** (sem acesso ao DOM) e é encerrado após 2 segundos, o que evita laços infinitos travando a página.
 - **Exercícios reais:** cada exercício tem casos de teste; o progresso só é salvo quando todos passam.
-- **Internacionalização:** dicionário central `T` (EN e PT-BR) + atributos `data-i18n`. Adicionar um idioma é adicionar um objeto. O código JavaScript dos exemplos nunca é traduzido.
+- **Editor protegido:** a linha da função não pode ser apagada; ao tentar, o editor treme e pisca em vermelho. Comentários são livres.
+- **Internacionalização:** dicionário central `T` (EN, PT-BR, ES, FR e DE; o que falta cai para inglês) + atributos `data-i18n`. Adicionar um idioma é adicionar um objeto. O código JavaScript dos exemplos nunca é traduzido.
 - **Rotas:** SPA simples com hash (`#/home`, `#/learn`, `#/train`, `#/level`, `#/profile`, `#/login`).
 - **Typewriter:** função `typeEl` digita o HTML progressivamente (preservando os destaques amarelos) quando o título entra na tela via `IntersectionObserver`.
 - **Persistência:** `localStorage` guarda idioma, tema, progresso, atividade diária e conta.
@@ -58,8 +58,13 @@ Identidade visual: branco, quase-preto e o amarelo do JavaScript (`#F7DF1E`), co
 
 ```
 JS-Lab/
-├── index.html   # estrutura, estilos (CSS) e lógica (JS) da primeira versão
-├── logo.svg     # logo {js_}
+├── index.html        # estrutura da página (HTML semântico)
+├── css/
+│   └── style.css     # identidade visual, temas, layout responsivo e animações
+├── js/
+│   └── script.js     # traduções, exercícios, artigos, rotas, progresso e interações
+├── assets/
+│   └── logo.svg      # logo {js_}
 └── README.md
 ```
 
@@ -75,7 +80,7 @@ npx serve .
 
 ##  Próximos passos
 
-- [ ] Separar em `style.css` e `script.js`
+- [ ] Completar a tradução de ES, FR e DE (hoje cobrem a interface principal)
 - [ ] Mais exercícios (DOM e Interatividade ainda sem desafios)
 - [ ] Mais perguntas na avaliação (incluindo DOM)
 - [ ] Backend e contas reais
