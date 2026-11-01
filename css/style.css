@@ -1473,3 +1473,222 @@ dialog[open] {
 #tw {
   white-space: pre-wrap;
 }
+
+:root[data-theme="dark"] {
+  --bg: #05070a;
+  --soft: #0b0f14;
+  --line: #1b232d;
+  --pale: #0a0d11;
+}
+:root[data-theme="dark"] body {
+  background: #05070a;
+}
+:root[data-theme="dark"] header {
+  background: rgba(5, 7, 10, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+:root[data-theme="dark"] .gray {
+  background: transparent;
+}
+:root[data-theme="dark"]
+  :is(#home, #learn, #train, #assess, #progress)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 600px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 70% at 50% 0%,
+      rgba(247, 223, 30, 0.24),
+      transparent 70%
+    ),
+    linear-gradient(rgba(247, 223, 30, 0.11) 1px, transparent 1px) 0 0/36px 36px,
+    linear-gradient(90deg, rgba(247, 223, 30, 0.11) 1px, transparent 1px) 0
+      0/36px 36px;
+  -webkit-mask-image: radial-gradient(
+    75% 100% at 50% 0%,
+    #000 25%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(75% 100% at 50% 0%, #000 25%, transparent 100%);
+}
+:root[data-theme="dark"] .card,
+:root[data-theme="dark"] .mod {
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 0 70px rgba(247, 223, 30, 0.07);
+}
+:root[data-theme="dark"] #lab,
+:root[data-theme="dark"] #act {
+  border-color: var(--line);
+}
+.btn {
+  border-radius: 10px;
+}
+.card {
+  border-radius: 14px;
+}
+#lab {
+  border-radius: 14px;
+  overflow: hidden;
+}
+.badge {
+  display: inline-block;
+  background: rgba(247, 223, 30, 0.14);
+  color: var(--ink);
+  border: 1px solid rgba(200, 170, 0, 0.6);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font: 700 0.72rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:root[data-theme="dark"] .badge {
+  color: var(--y);
+  border-color: rgba(247, 223, 30, 0.4);
+}
+.mods {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+.mod {
+  text-align: left;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 12px;
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.2s,
+    box-shadow 0.3s;
+}
+.mod:hover {
+  transform: translateY(-6px);
+  border-color: var(--y);
+}
+.mod b {
+  font-size: 1.4rem;
+}
+.mod small {
+  font-family: var(--mono);
+  opacity: 0.75;
+}
+.mh {
+  font-size: 1.8rem;
+  margin: 14px 0;
+}
+.ex.exam {
+  border: 1px dashed var(--y);
+  margin-top: 12px;
+}
+.cz {
+  margin: 0;
+  padding: 18px 20px;
+  background: #0d1117;
+  color: #e6edf3;
+  font: 400 0.95rem/2.2 var(--mono);
+  font-size: var(--cs, 0.95rem);
+  white-space: pre;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.bl {
+  font: inherit;
+  background: #1b2330;
+  color: var(--y);
+  border: 1px dashed var(--y);
+  border-radius: 6px;
+  padding: 0 6px;
+  height: 1.8em;
+  text-align: center;
+  min-width: 3ch;
+}
+.bl:focus {
+  outline: 2px solid var(--y);
+  border-style: solid;
+}
+.bl.okb {
+  border: 1px solid #3fb950;
+  color: #3fb950;
+}
+.bl.badb {
+  border: 1px solid #f85149;
+  color: #f85149;
+  animation: shake 0.4s;
+}
+.ln {
+  display: block;
+  width: 100%;
+  text-align: left;
+  white-space: pre;
+  font: inherit;
+  color: #e6edf3;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 2px 12px;
+  margin: 4px 0;
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.2s;
+}
+.ln:hover {
+  transform: translateX(6px);
+  border-color: var(--y);
+}
+.ln.on {
+  border-color: var(--y);
+}
+.pool {
+  margin-bottom: 14px;
+}
+#act {
+  margin-top: 30px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  display: none;
+}
+#act.open {
+  display: block;
+  animation: up 0.5s;
+}
+.ah {
+  padding: 20px 24px;
+  background: var(--soft);
+  border-bottom: 1px solid var(--line);
+}
+.ah h3 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+}
+#aB {
+  padding: 20px 24px;
+}
+.req {
+  margin: 10px 0 0 18px;
+  padding: 0;
+}
+.req li {
+  margin: 6px 0;
+}
+.req code {
+  font-family: var(--mono);
+  color: var(--y);
+  background: #111;
+  padding: 1px 6px;
+  border-radius: 4px;
+}

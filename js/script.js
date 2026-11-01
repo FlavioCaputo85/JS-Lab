@@ -474,7 +474,7 @@ const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)];
 let S = {
   lang: "en",
-  theme: "light",
+  theme: "dark",
   user: "",
   act: {},
   done: {},
@@ -712,30 +712,58 @@ let cur = null,
   catF = "all",
   hi = 0;
 function renderList() {
-  const cats = [...new Set(EX.map((e) => e.c))];
-  $("#chips").innerHTML = ["all", ...cats]
-    .map(
-      (c) =>
-        `<button class="chip ${c === catF ? "on" : ""}" data-c="${c}" aria-pressed="${c === catF}">${c === "all" ? tr("all") : tr(c)}</button>`,
-    )
-    .join("");
-  $$(".chip").forEach(
-    (b) =>
-      (b.onclick = () => {
-        catF = b.dataset.c;
-        renderList();
-      }),
-  );
-  $("#list").innerHTML = EX.filter((e) => catF === "all" || e.c === catF)
-    .map(
-      (e) =>
-        `<button class="ex" data-id="${e.id}"><span><b>${L(e).t}</b><br><small>${tr(e.c)}</small></span><span class="dl d${e.d}">${tr("d_" + e.d)}</span><small>${e.m} ${tr("min")}</small><span class="stt ${S.done[e.id] ? "ok" : ""}">${S.done[e.id] ? "✓ " + tr("st_done") : tr("st_todo")}</span></button>`,
-    )
-    .join("");
-  $$(".ex").forEach((b) => (b.onclick = () => openEx(b.dataset.id)));
+  const cats = [...new Set(EX.map((e) => e.c))],
+    ex = EXM();
+  $("#chips").innerHTML = "";
+  if (catF === "all") {
+    $("#list").innerHTML =
+      '<div class="mods">' +
+      cats
+        .map((c, i) => {
+          const a = EX.filter((e) => e.c === c),
+            d = a.filter((e) => S.done[e.id]).length;
+          return `<button class="mod" data-c="${c}"><span class="badge">${tr("mod")} ${i + 1}</span><b>${tr(c)}</b><div class="bar"><i style="width:${(d / a.length) * 100}%"></i></div><small>${d}/${a.length} · ${ex[c] != null ? tr("exam") + " " + ex[c] + "%" : tr("exam_open")}</small></button>`;
+        })
+        .join("") +
+      "</div>";
+    $$(".mod").forEach(
+      (b) =>
+        (b.onclick = () => {
+          catF = b.dataset.c;
+          renderList();
+        }),
+    );
+    return;
+  }
+  const a = EX.filter((e) => e.c === catF);
+  $("#list").innerHTML =
+    `<button class="chip" id="bk">← ${tr("back")}</button><h3 class="mh">${tr(catF)}</h3>` +
+    a
+      .map(
+        (e) =>
+          `<button class="ex" data-id="${e.id}"><span><b>${L(e).t}</b><br><small>${tr("k_" + (e.k || "code"))}</small></span><span class="dl d${e.d}">${tr("d_" + e.d)}</span><small>${e.m} ${tr("min")}</small><span class="stt ${S.done[e.id] ? "ok" : ""}">${S.done[e.id] ? "✓ " + tr("st_done") : tr("st_todo")}</span></button>`,
+      )
+      .join("") +
+    `<button class="ex exam" data-x="${catF}"><span><b>${tr("exam")}</b><br><small>${tr("exam_open")}</small></span><span class="dl d3">${tr("exam")}</span><small>~25 ${tr("min")}</small><span class="stt ${ex[catF] === 100 ? "ok" : ""}">${ex[catF] != null ? ex[catF] + "%" : tr("st_todo")}</span></button>`;
+  $("#bk").onclick = () => {
+    catF = "all";
+    renderList();
+  };
+  $$(".ex[data-id]").forEach((b) => (b.onclick = () => openEx(b.dataset.id)));
+  $$(".ex[data-x]").forEach((b) => (b.onclick = () => openExam(b.dataset.x)));
 }
 function openEx(id, keep) {
-  cur = EX.find((e) => e.id === id);
+  const f = EX.find((e) => e.id === id);
+  if (!f) return;
+  cur = f;
+  if (cur.k) {
+    openAct(cur);
+    return;
+  }
+  $("#act").classList.remove("open");
+  $("#bNext").hidden = false;
+  $("#bHint").hidden = false;
+  $("#bChk").textContent = tr("check");
   const l = L(cur);
   $("#lT").textContent = l.t;
   $("#lD").textContent = l.d;
@@ -839,6 +867,7 @@ function runCode(code, ex) {
 const fm = (v) =>
   typeof v === "string" && v === "undefined" ? v : JSON.stringify(v);
 async function exec(check) {
+  if (cur.exam) return execExam(check);
   const fb = $("#fb");
   fb.className = "fb";
   fb.textContent = "…";
@@ -889,8 +918,7 @@ $("#bHint").onclick = () => {
   $("#fb").textContent = tr("nohint") + " " + L(cur).h;
 };
 $("#bNext").onclick = () => {
-  const i = EX.indexOf(cur);
-  openEx(EX[(i + 1) % EX.length].id);
+  nextItem();
 };
 
 /* ===== PROGRESS ===== */
@@ -1049,7 +1077,7 @@ $("#rst").onclick = () => {
   };
   S = {
     lang: "en",
-    theme: "light",
+    theme: "dark",
     user: "",
     act: {},
     done: {},
@@ -1942,6 +1970,594 @@ T.de = {
 };
 ["es", "fr", "de"].forEach((k) => {
   T[k].tp = T.en.tp;
+});
+/* ===== modules: fill / pick / order activities + final exams ===== */
+const EXM = () => (S.exam = S.exam || {});
+const escH = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const A = (id, c, k, d, m, en, pt, x) => ({ id, c, k, d, m, en, pt, ...x });
+EX.push(
+  A(
+    "f-vars",
+    "c_fund",
+    "fill",
+    1,
+    3,
+    {
+      t: "Complete the variables",
+      d: "Type the missing words to finish the code.",
+      h: "const never changes, let can change. The last blank prints to the console.",
+    },
+    {
+      t: "Complete as variáveis",
+      d: "Digite as palavras que faltam para terminar o código.",
+      h: "const nunca muda, let pode mudar. A última lacuna imprime no console.",
+    },
+    {
+      code: "{{const}} lang = 'JavaScript';\n{{let}} score = 0;\nscore = score + {{1}};\nconsole.{{log}}(lang, score);",
+    },
+  ),
+  A(
+    "p-if",
+    "c_logic",
+    "pick",
+    1,
+    3,
+    {
+      t: "Pick the right commands",
+      d: "Choose the correct operator and keyword in each blank.",
+      h: "Adults are 18 or more. The second branch has no condition.",
+    },
+    {
+      t: "Escolha os comandos certos",
+      d: "Escolha o operador e a palavra-chave corretos em cada lacuna.",
+      h: "Adulto é 18 ou mais. O segundo ramo não tem condição.",
+    },
+    {
+      code: "if (age {{>=}} 18) {\n  console.log('adult');\n} {{else}} {\n  console.log('minor');\n}",
+      bank: [">=", "<=", "else", "else if", "===", "then"],
+    },
+  ),
+  A(
+    "o-loop",
+    "c_loops",
+    "order",
+    2,
+    4,
+    {
+      t: "Put the loop in order",
+      d: "Click the lines in the order they must appear to sum 1 + 2 + 3.",
+      h: "Create the total first, close the loop before printing.",
+    },
+    {
+      t: "Coloque o laço em ordem",
+      d: "Clique nas linhas na ordem em que devem aparecer para somar 1 + 2 + 3.",
+      h: "Crie o total primeiro, feche o laço antes de imprimir.",
+    },
+    {
+      lines: [
+        "let total = 0;",
+        "for (let i = 1; i <= 3; i++) {",
+        "  total += i;",
+        "}",
+        "console.log(total);",
+      ],
+    },
+  ),
+  A(
+    "f-fn",
+    "c_func",
+    "fill",
+    2,
+    4,
+    {
+      t: "Complete the function",
+      d: "Type the missing words.",
+      h: "A function is declared with function and gives a value back with return.",
+    },
+    {
+      t: "Complete a função",
+      d: "Digite as palavras que faltam.",
+      h: "Uma função é declarada com function e devolve um valor com return.",
+    },
+    {
+      code: "{{function}} double(n) {\n  {{return}} n * 2;\n}\nconsole.log(double({{4}}));",
+    },
+  ),
+  A(
+    "p-arr",
+    "c_arr",
+    "pick",
+    2,
+    4,
+    {
+      t: "Chain array methods",
+      d: "Keep numbers above 2, then double them.",
+      h: "filter keeps items, map transforms them.",
+    },
+    {
+      t: "Encadeie métodos de array",
+      d: "Mantenha os números acima de 2 e depois dobre-os.",
+      h: "filter mantém itens, map transforma.",
+    },
+    {
+      code: "const nums = [1, 2, 3, 4];\nconst big = nums.{{filter}}((n) => n {{>}} 2);\nconst doubled = big.{{map}}((n) => n * 2);",
+      bank: ["filter", "map", "reduce", "forEach", ">", "<", ">="],
+    },
+  ),
+  A(
+    "o-async",
+    "c_adv",
+    "order",
+    3,
+    5,
+    {
+      t: "Order an async function",
+      d: "Arrange the lines of a function that loads JSON.",
+      h: "Declare, fetch, parse, return, close.",
+    },
+    {
+      t: "Ordene uma função async",
+      d: "Organize as linhas de uma função que carrega JSON.",
+      h: "Declare, busque, converta, retorne, feche.",
+    },
+    {
+      lines: [
+        "async function load() {",
+        "  const res = await fetch(url);",
+        "  const data = await res.json();",
+        "  return data;",
+        "}",
+      ],
+    },
+  ),
+);
+const X = (en, pt, fns) => ({ lead: { en, pt }, fns });
+const EXAMS = {
+  c_fund: X(
+    "Three small tools, one file. Solve all of them.",
+    "Três pequenas ferramentas, um arquivo. Resolva todas.",
+    [
+      [
+        "area(w, h)",
+        {
+          en: "returns the area of a rectangle",
+          pt: "retorna a área de um retângulo",
+        },
+        [
+          [[3, 4], 12],
+          [[5, 5], 25],
+          [[0, 9], 0],
+        ],
+      ],
+      [
+        "fullName(first, last)",
+        {
+          en: "returns first and last joined by a space",
+          pt: "retorna nome e sobrenome separados por espaço",
+        },
+        [
+          [["Ada", "Lovelace"], "Ada Lovelace"],
+          [["Linus", "T"], "Linus T"],
+        ],
+      ],
+      [
+        "isAdult(age)",
+        {
+          en: "true when age is 18 or more",
+          pt: "true quando age é 18 ou mais",
+        },
+        [
+          [[18], true],
+          [[17], false],
+          [[40], true],
+        ],
+      ],
+    ],
+  ),
+  c_logic: X(
+    "Decisions everywhere: grades, calendars and comparisons.",
+    "Decisões por toda parte: notas, calendário e comparações.",
+    [
+      [
+        "grade(score)",
+        {
+          en: "A from 90, B from 80, C from 70, otherwise F",
+          pt: "A a partir de 90, B de 80, C de 70, senão F",
+        },
+        [
+          [[95], "A"],
+          [[85], "B"],
+          [[70], "C"],
+          [[10], "F"],
+        ],
+      ],
+      [
+        "isLeap(year)",
+        {
+          en: "true for leap years (by 4, not by 100 unless by 400)",
+          pt: "true para anos bissextos (por 4, não por 100 exceto por 400)",
+        },
+        [
+          [[2024], true],
+          [[1900], false],
+          [[2000], true],
+          [[2023], false],
+        ],
+      ],
+      [
+        "maxOf3(a, b, c)",
+        {
+          en: "returns the biggest of three numbers",
+          pt: "retorna o maior de três números",
+        },
+        [
+          [[1, 9, 3], 9],
+          [[5, 2, 1], 5],
+          [[2, 2, 8], 8],
+        ],
+      ],
+    ],
+  ),
+  c_loops: X(
+    "Repeat with confidence: products, counting and sequences.",
+    "Repita com confiança: produtos, contagens e sequências.",
+    [
+      [
+        "factorial(n)",
+        {
+          en: "1 * 2 * ... * n, and 1 when n is 0",
+          pt: "1 * 2 * ... * n, e 1 quando n é 0",
+        },
+        [
+          [[5], 120],
+          [[0], 1],
+          [[3], 6],
+        ],
+      ],
+      [
+        "countVowels(str)",
+        {
+          en: "counts a, e, i, o, u (lowercase)",
+          pt: "conta a, e, i, o, u (minúsculas)",
+        },
+        [
+          [["javascript"], 3],
+          [["xyz"], 0],
+          [["education"], 5],
+        ],
+      ],
+      [
+        "countDown(n)",
+        { en: "returns [n, n-1, ..., 1]", pt: "retorna [n, n-1, ..., 1]" },
+        [
+          [[3], [3, 2, 1]],
+          [[1], [1]],
+          [[0], []],
+        ],
+      ],
+    ],
+  ),
+  c_func: X(
+    "Build small reusable functions.",
+    "Construa pequenas funções reutilizáveis.",
+    [
+      [
+        "power(base, exp)",
+        { en: "returns base raised to exp", pt: "retorna base elevada a exp" },
+        [
+          [[2, 3], 8],
+          [[5, 0], 1],
+          [[3, 2], 9],
+        ],
+      ],
+      [
+        "capitalize(str)",
+        {
+          en: "first letter uppercase, the rest lowercase",
+          pt: "primeira letra maiúscula, o resto minúsculo",
+        },
+        [
+          [["jAVA"], "Java"],
+          [["x"], "X"],
+        ],
+      ],
+      [
+        "average(arr)",
+        {
+          en: "mean of the numbers, 0 for an empty array",
+          pt: "média dos números, 0 para array vazio",
+        },
+        [
+          [[[2, 4, 6]], 4],
+          [[[]], 0],
+          [[[5]], 5],
+        ],
+      ],
+    ],
+  ),
+  c_arr: X("Work with lists and counts.", "Trabalhe com listas e contagens.", [
+    [
+      "sumArray(arr)",
+      { en: "sum of all items", pt: "soma de todos os itens" },
+      [
+        [[[1, 2, 3]], 6],
+        [[[]], 0],
+      ],
+    ],
+    [
+      "longest(words)",
+      {
+        en: "longest word (first one on ties)",
+        pt: "palavra mais longa (a primeira em empates)",
+      },
+      [
+        [[["a", "abc", "ab"]], "abc"],
+        [[["hi", "yo"]], "hi"],
+      ],
+    ],
+    [
+      "countBy(arr)",
+      {
+        en: "object counting how many times each item appears",
+        pt: "objeto contando quantas vezes cada item aparece",
+      },
+      [
+        [[["a", "b", "a"]], { a: 2, b: 1 }],
+        [[[]], {}],
+      ],
+    ],
+  ]),
+  c_adv: X(
+    "Harder data wrangling. Take your time.",
+    "Manipulação de dados mais difícil. Com calma.",
+    [
+      [
+        "flatten(arr)",
+        {
+          en: "flattens nested arrays completely",
+          pt: "achata arrays aninhados por completo",
+        },
+        [
+          [[[1, [2, [3]]]], [1, 2, 3]],
+          [[[]], []],
+        ],
+      ],
+      [
+        "chunk(arr, size)",
+        {
+          en: "splits into groups of size",
+          pt: "divide em grupos de tamanho size",
+        },
+        [
+          [
+            [[1, 2, 3, 4, 5], 2],
+            [[1, 2], [3, 4], [5]],
+          ],
+          [[[1], 3], [[1]]],
+        ],
+      ],
+      [
+        "compact(arr)",
+        { en: "removes falsy values", pt: "remove valores falsy" },
+        [
+          [[[0, 1, false, 2, "", "x"]], [1, 2, "x"]],
+          [[[null]], []],
+        ],
+      ],
+    ],
+  ),
+};
+function markDone(id) {
+  if (!S.done[id] && EX.some((e) => e.id === id))
+    S.hist.push({ id, t: Date.now() });
+  S.done[id] = true;
+  if (!S.days.includes(today())) S.days.push(today());
+  S.act = S.act || {};
+  S.act[today()] = (S.act[today()] || 0) + 1;
+  renderList();
+  renderProgress();
+}
+function nextItem() {
+  const a = EX.filter((e) => e.c === cur.c),
+    i = a.indexOf(cur);
+  i >= 0 && i < a.length - 1 ? openEx(a[i + 1].id) : openExam(cur.c);
+}
+let ordSel = [];
+function openAct(it) {
+  cur = it;
+  $("#lab").classList.remove("open");
+  const l = L(it);
+  $("#aT").textContent = l.t;
+  $("#aD").textContent = l.d;
+  $("#aFb").textContent = "";
+  $("#aFb").className = "fb";
+  if (it.k === "order") {
+    ordSel = [];
+    renderOrder();
+  } else {
+    let i = 0;
+    $("#aB").innerHTML =
+      '<pre class="cz">' +
+      it.code
+        .split(/\{\{(.+?)\}\}/)
+        .map((p, j) =>
+          j % 2
+            ? it.k === "pick"
+              ? `<select class="bl" data-i="${i++}" aria-label="blank"><option value="">…</option>${it.bank.map((o) => `<option>${escH(o)}</option>`).join("")}</select>`
+              : `<input class="bl" data-i="${i++}" style="width:${p.length + 3}ch" autocomplete="off" spellcheck="false" aria-label="blank">`
+            : hl(p),
+        )
+        .join("") +
+      "</pre>";
+  }
+  $("#act").classList.add("open");
+  $("#act").scrollIntoView({
+    behavior: RM ? "auto" : "smooth",
+    block: "nearest",
+  });
+}
+function renderOrder() {
+  const it = cur,
+    n = it.lines.length,
+    idx = [...Array(n).keys()]
+      .sort((a, b) => ((a * 3 + 1) % n) - ((b * 3 + 1) % n))
+      .filter((i) => !ordSel.includes(i));
+  $("#aB").innerHTML =
+    `<div class="lbl">${tr("o_pool")}</div><div class="pool">${idx.map((i) => `<button class="ln" data-i="${i}">${escH(it.lines[i])}</button>`).join("")}</div><div class="lbl">${tr("o_ans")}</div><div class="cz">${ordSel.map((i) => `<button class="ln on" data-i="${i}">${escH(it.lines[i])}</button>`).join("") || "…"}</div>`;
+  $$("#aB .ln").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const i = +b.dataset.i;
+        ordSel = ordSel.includes(i)
+          ? ordSel.filter((x) => x !== i)
+          : [...ordSel, i];
+        renderOrder();
+      }),
+  );
+}
+$("#aChk").onclick = () => {
+  const it = cur,
+    fb = $("#aFb");
+  fb.className = "fb";
+  let ok, msg;
+  if (it.k === "order") {
+    ok = ordSel.length === it.lines.length && ordSel.every((v, i) => v === i);
+    msg = tr("o_bad");
+  } else {
+    const an = [...it.code.matchAll(/\{\{(.+?)\}\}/g)].map((m) => m[1]);
+    let c = 0;
+    $$("#aB .bl").forEach((e, i) => {
+      const g = e.value.trim() === an[i];
+      e.classList.toggle("okb", g);
+      e.classList.remove("badb");
+      if (!g) {
+        void e.offsetWidth;
+        e.classList.add("badb");
+      }
+      if (g) c++;
+    });
+    ok = c === an.length;
+    msg = `${c}/${an.length} ${tr("act_part")}`;
+  }
+  S.att++;
+  if (ok) {
+    S.cor++;
+    markDone(it.id);
+    fb.className = "fb win";
+    fb.textContent = tr("act_ok");
+  } else {
+    fb.className = "fb bad";
+    fb.textContent = msg;
+  }
+  save();
+};
+$("#aHint").onclick = () => {
+  $("#aFb").className = "fb";
+  $("#aFb").textContent = tr("nohint") + " " + L(cur).h;
+};
+$("#aRst").onclick = () => openAct(cur);
+$("#aNext").onclick = () => nextItem();
+function openExam(c) {
+  const X = EXAMS[c];
+  cur = { exam: 1, id: "exam-" + c, c, X };
+  $("#act").classList.remove("open");
+  $("#bNext").hidden = true;
+  $("#bHint").hidden = true;
+  $("#bChk").textContent = tr("exam_sub");
+  $("#lT").textContent = tr("exam") + " · " + tr(c);
+  $("#lD").innerHTML =
+    `<div class="badge">${tr("exam")}</div><p>${L(X.lead)}</p><p class="note">${tr("exam_note")}</p><ol class="req">${X.fns.map((f) => `<li><code>${f[0]}</code> ${L(f[1])}</li>`).join("")}</ol>`;
+  ta.value = X.fns.map((f) => `function ${f[0]} {\n  // TODO\n}`).join("\n\n");
+  head = "";
+  lastOk = ta.value;
+  sync();
+  $("#fb").className = "fb";
+  $("#fb").textContent = "";
+  $("#lab").classList.add("open");
+  $("#lab").scrollIntoView({
+    behavior: RM ? "auto" : "smooth",
+    block: "nearest",
+  });
+}
+async function execExam(check) {
+  const fb = $("#fb");
+  fb.className = "fb";
+  fb.textContent = "…";
+  let tot = 0,
+    pass = 0;
+  const out = [];
+  for (const [sig, , tests] of cur.X.fns) {
+    const fn = sig.split("(")[0],
+      r = await runCode(ta.value, { fn, tests });
+    tot += tests.length;
+    if (r === "timeout") {
+      out.push(`✗ ${fn}: ${tr("tmo")}`);
+      continue;
+    }
+    const p = r.filter((x) => x.ok).length,
+      bad = r.findIndex((x) => !x.ok);
+    pass += p;
+    out.push(
+      `${p === tests.length ? "✓" : "✗"} ${fn}: ${p}/${tests.length}` +
+        (bad >= 0
+          ? `\n    ${fn}(${tests[bad][0].map(fm).join(", ")}) → ${r[bad].err ? r[bad].err : fm(r[bad].r)}`
+          : ""),
+    );
+  }
+  const pct = Math.round((pass / tot) * 100);
+  fb.textContent = out.join("\n") + `\n\n${tr("exam_score")}: ${pct}%`;
+  if (!check) return;
+  S.att++;
+  const ex = EXM();
+  if (pct > (ex[cur.c] || 0)) ex[cur.c] = pct;
+  if (pct === 100) {
+    S.cor++;
+    markDone(cur.id);
+    fb.className = "fb win";
+  } else fb.className = "fb bad";
+  save();
+  renderList();
+  renderProgress();
+}
+Object.assign(T.en, {
+  mod: "Module",
+  exam: "Final exam",
+  exam_open: "Open anytime",
+  exam_note:
+    "You can take this exam at any time, even before finishing the module. Your best score is saved.",
+  exam_sub: "Submit exam",
+  exam_score: "Score",
+  back: "Back to modules",
+  k_code: "Write code",
+  k_fill: "Fill the blanks",
+  k_pick: "Pick the commands",
+  k_order: "Order the lines",
+  o_pool: "Available lines (click to add)",
+  o_ans: "Your order (click to remove)",
+  o_bad: "Not the right order yet. Think about what must run first.",
+  act_ok: "✓ Correct! Progress saved.",
+  act_part: "blanks correct",
+  reset: "Reset",
+});
+Object.assign(T.pt, {
+  mod: "Módulo",
+  exam: "Prova final",
+  exam_open: "Disponível a qualquer momento",
+  exam_note:
+    "Você pode fazer esta prova a qualquer momento, mesmo antes de terminar o módulo. Sua melhor nota fica salva.",
+  exam_sub: "Enviar prova",
+  exam_score: "Nota",
+  back: "Voltar aos módulos",
+  k_code: "Escrever código",
+  k_fill: "Completar lacunas",
+  k_pick: "Escolher comandos",
+  k_order: "Ordenar linhas",
+  o_pool: "Linhas disponíveis (clique para adicionar)",
+  o_ans: "Sua ordem (clique para remover)",
+  o_bad: "Ainda não é a ordem certa. Pense no que precisa rodar primeiro.",
+  act_ok: "✓ Correto! Progresso salvo.",
+  act_part: "lacunas corretas",
+  reset: "Reiniciar",
 });
 applyTheme();
 applyPrefs();
